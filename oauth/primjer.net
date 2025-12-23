@@ -1,0 +1,49 @@
+Public Function GetAuthorizeUrl( _
+    ByVal consumerKey As String, _
+    ByVal consumerSecret As String) As String
+
+  Dim oauthSession As OAuthSession = GetOAuthSession(consumerKey, consumerSecret)
+  Dim requestToken As IToken = oauthSession.GetRequestToken("GET")
+
+  Return oauthSession.GetUserAuthorizationUrlForToken(requestToken)
+End Function
+
+Public Function ExchangeRequestTokenForAccessToken( _
+    ByVal consumerKey As String, _
+    ByVal consumerSecret As String, _
+    ByVal verifier As String, _
+    ByVal requestToken As IToken) As IToken
+
+  Dim oauthSession As OAuthSession = GetOAuthSession(consumerKey, consumerSecret)
+
+  Return oauthSession.ExchangeRequestTokenForAccessToken(requestToken, "GET", verifier)
+End Function
+
+Public Function AccessProtectedResource( _
+    ByVal consumerKey As String, _
+    ByVal consumerSecret As String, _
+    ByVal token as IToken, _
+    ByVal parameters As String) As String
+
+  Dim oauthSession As OAuthSession = GetOAuthSession(consumerKey, consumerSecret)
+  oauthSession.AccessToken = token
+
+  Dim url As String = ProtectedResourceUrl & "?" & Parameters
+  Dim request As IConsumerRequest = oauthSession.Request().Get().ForUrl(url)
+
+  Return request.ToString()
+End Function
+
+Private Function GetOAuthSession( _
+    ByVal consumerKey As String, _
+    ByVal consumerSecret As String) As OAuthSession
+
+    Dim consumerContext As OAuthConsumerContext = New OAuthConsumerContext() With _
+            { _
+            .ConsumerKey = consumerKey, _
+            .ConsumerSecret = consumerSecret, _
+            .SignatureMethod = SignatureMethod.HmacSha1 _
+            }
+
+    Return New OAuthSession(consumerContext, RequestTokenUrl, AuthorizeUrl, AccessTokenUrl)
+End Function
